@@ -31,6 +31,7 @@ import java.util.List;
 
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.container.test.api.OperateOnDeployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.junit.InSequence;
 import org.jboss.arquillian.test.api.ArquillianResource;
@@ -53,7 +54,6 @@ import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
-import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.repository.Repository;
 
 /**
@@ -76,9 +76,6 @@ public class EventAdminTestCase {
     @ArquillianResource
     BundleContext context;
 
-    @ArquillianResource
-    PackageAdmin packageAdmin;
-
     @Deployment(name = EVENT_ADMIN_PROVIDER)
     public static JavaArchive eventadminProvider() {
         final JavaArchive archive = ShrinkWrap.create(JavaArchive.class, EVENT_ADMIN_PROVIDER);
@@ -90,6 +87,7 @@ public class EventAdminTestCase {
                 builder.addBundleSymbolicName(archive.getName());
                 builder.addBundleManifestVersion(2);
                 builder.addImportPackages(XRequirementBuilder.class, XRequirement.class, Repository.class, Resource.class);
+                builder.addDynamicImportPackages(EventAdmin.class);
                 return builder.openStream();
             }
         });
@@ -113,12 +111,12 @@ public class EventAdminTestCase {
 
     @Test
     @InSequence(0)
-    public void addEventAdminSupport() throws BundleException {
-        Bundle bundle = packageAdmin.getBundles(EVENT_ADMIN_PROVIDER, null)[0];
+    public void addEventAdminSupport(@ArquillianResource Bundle bundle) throws BundleException {
         EventAdminSupport.provideEventAdmin(context, bundle);
     }
 
     @Test
+    @InSequence(1)
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public void testEventHandler() throws Exception {
         InputStream input = deployer.getDeployment(EVENT_ADMIN_BUNDLE);

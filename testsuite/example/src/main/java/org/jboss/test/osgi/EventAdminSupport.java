@@ -25,22 +25,22 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.event.EventAdmin;
 
 /**
+ * Provide the org.apache.felix.eventadmin bundle
+ * 
  * @author thomas.diesler@jboss.com
  * @since 28-Jan-2012
  */
 public class EventAdminSupport extends RepositorySupport {
 
+    public static final String EVENT_ADMIN_SERVICE = "org.osgi.service.event.EventAdmin";
     public static final String APACHE_FELIX_EVENTADMIN = "org.apache.felix:org.apache.felix.eventadmin";
 
-    public static EventAdmin provideEventAdmin(BundleContext syscontext, Bundle bundle) throws BundleException {
-        ServiceReference sref = syscontext.getServiceReference(EventAdmin.class.getName());
+    public static void provideEventAdmin(BundleContext syscontext, Bundle bundle) throws BundleException {
+        ServiceReference<?> sref = syscontext.getServiceReference(EVENT_ADMIN_SERVICE);
         if (sref == null) {
             installSupportBundle(syscontext, getCoordinates(bundle, APACHE_FELIX_EVENTADMIN)).start();
-            sref = syscontext.getServiceReference(EventAdmin.class.getName());
         }
-        return (EventAdmin) syscontext.getService(sref);
     }
 }

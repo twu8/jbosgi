@@ -42,14 +42,14 @@ import org.junit.runner.RunWith;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
+import org.osgi.framework.VersionRange;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ManagedService;
 
 /**
  * A test that shows how an OSGi {@link ManagedService} can be configured through the {@link ConfigurationAdmin}.
- * 
+ *
  * @author Thomas.Diesler@jboss.com
  * @author David Bosschaert
  * @since 11-Dec-2010
@@ -58,9 +58,6 @@ import org.osgi.service.cm.ManagedService;
 public class ConfigurationAdminTestCase {
 
     static final String PID_A = ConfigurationAdminTestCase.class.getSimpleName() + "-pid-a";
-
-    @ArquillianResource
-    Bundle bundle;
 
     @Deployment
     public static JavaArchive createdeployment() {
@@ -71,7 +68,7 @@ public class ConfigurationAdminTestCase {
                 OSGiManifestBuilder builder = OSGiManifestBuilder.newInstance();
                 builder.addBundleSymbolicName(archive.getName());
                 builder.addBundleManifestVersion(2);
-                builder.addImportPackages(ConfigurationAdmin.class);
+                builder.addImportPackage(ConfigurationAdmin.class, new VersionRange("[1.4,1.5)"));
                 return builder.openStream();
             }
         });
@@ -79,7 +76,10 @@ public class ConfigurationAdminTestCase {
     }
 
     @Test
-    public void testManagedService() throws Exception {
+    public void testManagedService(@ArquillianResource Bundle bundle) throws Exception {
+
+        bundle.start();
+        Assert.assertEquals("Bundle.ACTIVE", Bundle.ACTIVE, bundle.getState());
 
         // Get the {@link Configuration} for the given PID
         BundleContext context = bundle.getBundleContext();
@@ -110,7 +110,6 @@ public class ConfigurationAdminTestCase {
     }
 
     private ConfigurationAdmin getConfigurationAdmin(BundleContext context) {
-        ServiceReference sref = context.getServiceReference(ConfigurationAdmin.class.getName());
-        return (ConfigurationAdmin) context.getService(sref);
+        return context.getService(context.getServiceReference(ConfigurationAdmin.class));
     }
 }

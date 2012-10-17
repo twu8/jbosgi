@@ -68,9 +68,6 @@ public class BundleStateTestCase {
     @ArquillianResource
     BundleContext context;
 
-    @ArquillianResource
-    PackageAdmin packageAdmin;
-
     @Deployment(name = JMX_PROVIDER)
     public static JavaArchive jmxProvider() {
         final JavaArchive archive = ShrinkWrap.create(JavaArchive.class, JMX_PROVIDER);
@@ -82,8 +79,9 @@ public class BundleStateTestCase {
                 OSGiManifestBuilder builder = OSGiManifestBuilder.newInstance();
                 builder.addBundleSymbolicName(archive.getName());
                 builder.addBundleManifestVersion(2);
-                builder.addImportPackages(BundleStateMBean.class, MBeanServer.class, TabularData.class);
                 builder.addImportPackages(XRequirementBuilder.class, XRequirement.class, Repository.class, Resource.class);
+                builder.addImportPackages(PackageAdmin.class, MBeanServer.class, TabularData.class);
+                builder.addDynamicImportPackages(BundleStateMBean.class);
                 return builder.openStream();
             }
         });
@@ -92,8 +90,7 @@ public class BundleStateTestCase {
 
     @Test
     @InSequence(0)
-    public void addJMXSupport() throws BundleException {
-        Bundle bundle = packageAdmin.getBundles(JMX_PROVIDER, null)[0];
+    public void addJMXSupport(@ArquillianResource Bundle bundle) throws BundleException {
         JMXSupport.provideMBeanServer(context, bundle);
     }
 
@@ -101,10 +98,10 @@ public class BundleStateTestCase {
     @InSequence(1)
     public void testBundleStateMBean() throws Exception {
 
-        ServiceReference sref = context.getServiceReference(MBeanServer.class.getName());
-        MBeanServer server = (MBeanServer) context.getService(sref);
+        ServiceReference<MBeanServer> sref = context.getServiceReference(MBeanServer.class);
+        MBeanServer server = context.getService(sref);
 
-        ObjectName oname = ObjectName.getInstance(BundleStateMBean.OBJECTNAME);
+        ObjectName oname = ObjectName.getInstance("osgi.core:type=bundleState,version=1.5");
         BundleStateMBean bundleState = JMXSupport.getMBeanProxy(server, oname, BundleStateMBean.class);
         assertNotNull("BundleStateMBean not null", bundleState);
 

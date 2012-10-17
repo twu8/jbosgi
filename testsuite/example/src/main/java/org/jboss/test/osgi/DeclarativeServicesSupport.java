@@ -26,6 +26,8 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 
 /**
+ * Provide the org.apache.felix.scr bundle
+ * 
  * @author thomas.diesler@jboss.com
  * @since 28-Jan-2012
  */
